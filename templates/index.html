@@ -24,6 +24,13 @@
         <button type="submit" class="btn btn-primary btn-block btn-large">Predict</button>
     </form>
 
+    <form action="{{ url_for('ask')}}"method="post">
+      <input type="text" name="image" placeholder="Image_ID" required="required" />
+        <input type="text" name="question" placeholder="Question" required="required" />
+
+        <button type="submit" class="btn btn-primary btn-block btn-large">Ask</button>
+    </form>
+
    <br>
    <br>
    {{ prediction_text }}
