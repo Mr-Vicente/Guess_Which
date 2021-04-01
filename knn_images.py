@@ -130,8 +130,8 @@ def prepare_encodings_good():
     feats_dir = "./assets/feats_a"
     encodings = None
     for enc_name in sorted(os.listdir(feats_dir)):
-        _encodings = np.load(f'{feats_dir}/{enc_name}', 'r')
-        _encodings = _encodings['encodings']
+        _encodings = np.load(f'{feats_dir}/{enc_name}', 'r', allow_pickle=True)
+        _encodings = _encodings['encodings'].detach().cpu().numpy()
         if encodings is None:
             encodings = _encodings
         else:
