@@ -108,6 +108,19 @@ def show_k_images(similar_images):
         plt.imshow(Image.open(os.path.join(DATA_DIR, filename)))
 
 
+def prepare_encodings():
+    feats_dir = "./assets/feats"
+    encodings = None
+    for enc_name in sorted(os.listdir(feats_dir)):
+        _encodings = np.load(f'{feats_dir}/{enc_name}.npz', 'r')
+        _encodings = encodings['x']
+        if encodings is None:
+            encodings = _encodings
+        else:
+            encodings = np.concatenate([encodings, _encodings], axis=0)
+
+    return encodings
+
 def get_nearest_images_idx(chosen_idx):
     vgg = load_vgg()
     if torch.cuda.is_available():
@@ -115,8 +128,7 @@ def get_nearest_images_idx(chosen_idx):
 
     data_loader = loading_data()
     # encodings = create_images_encoding(vgg, data_loader)
-    encodings = np.load("./assets/images", 'r')
-    encodings = encodings['x']
+    encodings = prepare_encodings()
     _, top_k_indicies = findTopKSimilar_simple(encodings, chosen_idx, k=5)
     similar_images = obtain_similiar_images(top_k_indicies)
     return similar_images[:-4]
