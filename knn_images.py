@@ -9,8 +9,9 @@ import torch
 
 DATA_DIR = "./assets/images"
 
+
 def load_vgg():
-    #model = torch.hub.load('pytorch/vision:v0.9.0', 'vgg11', pretrained=True)
+    # model = torch.hub.load('pytorch/vision:v0.9.0', 'vgg11', pretrained=True)
     # or any of these variants
     # model = torch.hub.load('pytorch/vision:v0.9.0', 'vgg11_bn', pretrained=True)
     # model = torch.hub.load('pytorch/vision:v0.9.0', 'vgg13', pretrained=True)
@@ -66,14 +67,14 @@ def findTopKSimilar(data_loader, encodings, image_index, k=5):
         images, _ = next(images_it)
         batch_size = len(images)
         for image_i in range(batch_size):
-              encodings_index = index + image_i
-              sel_img_encoding = encodings[image_index]
-              curr_img_encoding = encodings[encodings_index]
-              distance = L2_NORM(sel_img_encoding, curr_img_encoding)
-              if torch.cuda.is_available():
-                  distance = distance.detach().cpu().numpy()
-              distances.append(distance)
-              #print("Torch NORM L2 Distance is : ", distance)
+            encodings_index = index + image_i
+            sel_img_encoding = encodings[image_index]
+            curr_img_encoding = encodings[encodings_index]
+            distance = L2_NORM(sel_img_encoding, curr_img_encoding)
+            if torch.cuda.is_available():
+                distance = distance.detach().cpu().numpy()
+            distances.append(distance)
+            # print("Torch NORM L2 Distance is : ", distance)
         index += batch_size
     distances_topK_indicies = np.argpartition(distances, -k)[-k:]
     distances = np.array(distances)
@@ -83,13 +84,13 @@ def findTopKSimilar(data_loader, encodings, image_index, k=5):
 def findTopKSimilar_simple(encodings, image_index, k=5):
     distances = []
     for image_idx in range(encodings.shape[0]):
-      sel_img_encoding = torch.tensor(encodings[image_index])
-      curr_img_encoding = torch.tensor(encodings[image_idx])
-      distance = L2_NORM(sel_img_encoding, curr_img_encoding)
-      if torch.cuda.is_available():
-          distance = distance.detach().cpu().numpy()
-      distances.append(distance)
-    distances_topK_indicies = np.argpartition(distances, k)[:k]
+        sel_img_encoding = torch.tensor(encodings[image_index])
+        curr_img_encoding = torch.tensor(encodings[image_idx])
+        distance = L2_NORM(sel_img_encoding, curr_img_encoding)
+        if torch.cuda.is_available():
+            distance = distance.detach().cpu().numpy()
+        distances.append(distance)
+    distances_topK_indicies = np.argpartition(distances, -k)[-k:]
     distances = np.array(distances)
     return distances[distances_topK_indicies], distances_topK_indicies
 
@@ -116,27 +117,40 @@ def prepare_encodings():
         _encodings = np.load(f'{feats_dir}/{enc_name}', 'r')
         _encodings = _encodings['x'].T
         _encodings = np.mean(_encodings, axis=0)
-        #_encodings = _encodings[0,:]
-        _encodings = np.reshape(_encodings, newshape=(1,2048))
+        # _encodings = _encodings[0,:]
+        _encodings = np.reshape(_encodings, newshape=(1, 2048))
         if encodings is None:
             encodings = _encodings
         else:
             encodings = np.concatenate([encodings, _encodings], axis=0)
-    
+
     return encodings
+
+def prepare_encodings_good():
+    feats_dir = "./assets/feats_a"
+    encodings = None
+    for enc_name in sorted(os.listdir(feats_dir)):
+        _encodings = np.load(f'{feats_dir}/{enc_name}', 'r')
+        _encodings = _encodings['encodings']
+        if encodings is None:
+            encodings = _encodings
+        else:
+            encodings = np.concatenate([encodings, _encodings], axis=0)
+
+    return encodings
+
 
 def get_nearest_images_idx(chosen_idx):
     vgg = load_vgg()
     if torch.cuda.is_available():
         vgg.to('cuda')
 
-    #data_loader = loading_data()
+    # data_loader = loading_data()
     # encodings = create_images_encoding(vgg, data_loader)
-    encodings = prepare_encodings()
+    encodings = prepare_encodings_good()
     print("chosenid", chosen_idx)
-    print("encoding",encodings.shape)
+    print("encoding", encodings.shape)
     _, top_k_indicies = findTopKSimilar_simple(encodings, chosen_idx, k=5)
-    print("topk",top_k_indicies)
+    print("topk", top_k_indicies)
     similar_images = obtain_similiar_images(top_k_indicies)
     return similar_images
-
