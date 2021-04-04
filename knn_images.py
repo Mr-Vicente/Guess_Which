@@ -58,7 +58,7 @@ def L2_NORM(img_enc_sel, img_enc_inf):
     return torch.norm(((img_enc_sel * img_enc_inf)), 2, -1)
 
 
-def findTopKSimilar(data_loader, encodings, image_index, k=5):
+def find_topK_similar(data_loader, encodings, image_index, k=5):
     distances = []
     index = 0
     images_it = iter(data_loader)
@@ -81,7 +81,7 @@ def findTopKSimilar(data_loader, encodings, image_index, k=5):
     return distances[distances_topK_indicies], distances_topK_indicies
 
 
-def findTopKSimilar_simple(encodings, image_index, k=5):
+def find_topK_similar_simple(encodings, image_index, k=5):
     distances = []
     for image_idx in range(encodings.shape[0]):
         sel_img_encoding = torch.tensor(encodings[image_index])
@@ -101,7 +101,11 @@ def obtain_similiar_images(top_k_indicies):
     print(dir_files)
     similar_images = np.array(sorted_dir_files)
     similar_images = similar_images[top_k_indicies]
-    return similar_images
+    np_dir_files = np.array(similar_images)
+    np_sel_dir_files = np_dir_files[similar_images]
+    filenames_index = lambda s: s[:-4]
+    indexes = filenames_index(np_sel_dir_files)
+    return indexes.tolist()
 
 
 def show_k_images(similar_images):
@@ -126,7 +130,7 @@ def prepare_encodings():
 
     return encodings
 
-def prepare_encodings_good():
+def prepare_encodings_vgg():
     feats_dir = "./assets/feats_a"
     encodings = None
     for enc_name in sorted(os.listdir(feats_dir)):
@@ -147,10 +151,10 @@ def get_nearest_images_idx(chosen_idx):
 
     # data_loader = loading_data()
     # encodings = create_images_encoding(vgg, data_loader)
-    encodings = prepare_encodings_good()
-    print("chosenid", chosen_idx)
-    print("encoding", encodings.shape)
-    _, top_k_indicies = findTopKSimilar_simple(encodings, chosen_idx, k=5)
-    print("topk", top_k_indicies)
+    encodings = prepare_encodings_vgg()
+    print(f'Chosenid: {chosen_idx}')
+    print(f'Encoding shape: {encodings.shape}')
+    _, top_k_indicies = find_topK_similar_simple(encodings, chosen_idx, k=5)
+    print(f'Topk_indicies: {top_k_indicies}')
     similar_images = obtain_similiar_images(top_k_indicies)
     return similar_images
