@@ -98,34 +98,36 @@ jQuery(document).ready(function($) {
 
 /************** OUR CODE *********************/
 
-var images_to_guess = ["images/blog-1.jpg", "images/blog-2.jpg", "images/blog-3.jpg", "images/blog-4.jpg", "images/blog-5.jpg", "images/blog-6.jpg"];
-var chosen_image = "images/blog-1.jpg";
+//var images_to_guess = ["images/blog-1.jpg", "images/blog-2.jpg", "images/blog-3.jpg", "images/blog-4.jpg", "images/blog-5.jpg", "images/blog-6.jpg"];
+//var chosen_image = "images/blog-1.jpg";
 
-/*var images_to_guess = [];
-var chosen_image;*/
+var images_to_guess = [];
+var chosen_image;
 
 var i_think_not = [];
 for (var i = 0; i < images_to_guess.length; i++) {
     i_think_not.push(false);
 }
 
-function displayImages() {
+async function displayImages() {
     if (images_to_guess.length == 0)
-        newGame(false);
-   
+        await newGame(false);
     var display = document.getElementById("image_display");
-
+    console.log(images_to_guess)
     for (var i in images_to_guess) {
+        console.log("estou no for")
         var div1 = document.createElement("div");
         div1.className = "overlay-b";
         div1.id = "overlay_".concat(i.toString());
         div1.innerHTML = ` <div class="overlay-inner">
-                            <a-yes class="fa fa-check" onclick="guessImage(this,`+ i +`)" ></a-yes>
-                            <a-no class="fa fa-times" onclick="guessNot(this,`+i+`)"></a-no>
+                            
                            </div>`;
 
+        //<a-yes class="fa fa-check" onclick="guessImage(this,`+ i +`)" ></a-yes>
+        //<a-no class="fa fa-times" onclick="guessNot(this,`+i+`)"></a-no>
+        
         var img = document.createElement("img");
-        img.src = images_to_guess[i];
+        img.src = '../static/images/' + images_to_guess[i];
 
         var div3 = document.createElement("div");
         div3.className = "blog-thumb";
@@ -192,25 +194,34 @@ function guessNot(element, i) {
     i_think_not[i] = !i_think_not[i];
 }
 
-function newGame(pressed) {
+async function newGame(pressed) {
     document.getElementById("new_button").style.color = "red";
-    $.post("/startGame",
+    await $.post("/start_game",
         function (data) {
-            var response = jQuery.parseJSON(data);
+            var response = data
             chosen_image = response.Chosen;
+            
             images_to_guess = response.Indexes;
+            var ri = randomNumber(0,images_to_guess.length)
+            images_to_guess.splice(ri, 0,chosen_image)
+            console.log(images_to_guess)
         }
     );
     if(pressed)
         location.reload();
 }
 
+function randomNumber(min, max) { 
+    return Math.random() * (max - min) + min;
+} 
+
+
 function ask(input_question) {
     //document.getElementById("answer").innerHTML = "LMAO";
     $.post("/ask",
         { "id": chosen_image, "question": input_question },
         function (data) {
-            var response = jQuery.parseJSON(data);
+            var response = data
             var success = response.Success;
             /*if (success == false)
                 showRIPIcon();*/

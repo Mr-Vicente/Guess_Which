@@ -95,16 +95,22 @@ def find_topK_similar_simple(encodings, image_index, k=5):
     return distances[distances_topK_indicies], distances_topK_indicies
 
 
-def obtain_similiar_images(top_k_indicies):
+def obtain_similiar_images(top_k_indicies, chosen_idx):
     dir_files = os.listdir(DATA_DIR)
-    print(len(dir_files))
     sorted_dir_files = sorted(dir_files)
+    sorted_dir_files.remove(".comments")
+    print(sorted_dir_files)
     np_dir_files = np.array(sorted_dir_files)
     np_sim_dir_files = np_dir_files[top_k_indicies]
-    filenames_index = lambda s: s[:-4]
-    indexes = filenames_index(np_sim_dir_files)
-    return indexes.tolist()
 
+    indexes = remove_file_extension(np_sim_dir_files)
+    chosen = np_dir_files[chosen_idx][:-4]
+
+    print(indexes)
+    return indexes, chosen
+
+def remove_file_extension(test_list):
+    return [sub[ : -4] for sub in test_list]
 
 def show_k_images(similar_images):
     plt.figure()
@@ -154,5 +160,5 @@ def get_nearest_images_idx(chosen_idx):
     print(f'Encoding shape: {encodings.shape}')
     _, top_k_indicies = find_topK_similar_simple(encodings, chosen_idx, k=5)
     print(f'Topk_indicies: {top_k_indicies}')
-    similar_images = obtain_similiar_images(top_k_indicies)
-    return similar_images
+    similar_images,chosen  = obtain_similiar_images(top_k_indicies, chosen_idx)
+    return similar_images, chosen

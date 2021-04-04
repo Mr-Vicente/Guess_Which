@@ -15,31 +15,36 @@
         Artcore Template
 		http://www.templatemo.com/preview/templatemo_423_artcore
         -->
-        <link rel="stylesheet" href="css/bootstrap.css">
-        <link rel="stylesheet" href="css/font-awesome.css">
-        <link rel="stylesheet" href="css/animate.css">
-        <link rel="stylesheet" href="css/templatemo-misc.css">
-        <link rel="stylesheet" href="css/templatemo-style.css">
-        <link rel="stylesheet" href="css/our-template.css">
-        <script src="js/vendor/modernizr-2.6.1-respond-1.1.0.min.js"></script>
+        <link rel="stylesheet" href="{{ url_for('static', filename= 'css/bootstrap.css')}}">
+        <link rel="stylesheet" href="{{ url_for('static', filename= 'css/font-awesome.css')}}">
+        <link rel="stylesheet" href="{{ url_for('static', filename= 'css/animate.css')}}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/templatemo-misc.css')}}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/templatemo-style.css')}}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/our-template.css')}}">
 
-        <script src="js/vendor/jquery-1.11.0.min.js"></script>
+        
+        <script src="{{ url_for('static', filename='js/vendor/modernizr-2.6.1-respond-1.1.0.min.js')}}"></script>
+        <script src="{{ url_for('static', filename='js/vendor/jquery-1.11.0.min.js')}}"></script>
+
+
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.0.min.js"><\/script>')</script>
-        <script src="js/plugins.js"></script>
-        <script src="js/main.js"></script>
+        <script src="{{ url_for('static', filename='js/plugins.js')}}"></script>
+
+        <script src="{{ url_for('static', filename='js/main.js')}}"></script>
+
     </head>
     <body onload="displayImages()">
-        <section id="pageloader">
+        <!--section id="pageloader">
             <div class="loader-item fa fa-spin colored-border"></div>
-        </section> <!-- /#pageloader -->
+        </section--> <!-- /#pageloader -->
 
-        <header class="site-header container-fluid">
+        <!--header class="site-header container-fluid">
             <div class="top-header">
                 <div class="logo col-md-6 col-sm-6">
                     <h1><em>Guess</em>Which</h1>
-                </div> <!-- /.logo -->
+                </div> 
             </div>
-        </header> <!-- /.site-header -->
+        </header--> <!-- /.site-header -->
 
         <div class="content-wrapper">
             <div class="col_one">
@@ -79,8 +84,8 @@
         <script type="text/javascript">
             //<![CDATA[
             $(window).load(function() { // makes sure the whole site is loaded
-                $('.loader-item').fadeOut(); // will first fade out the loading animation
-                    $('#pageloader').delay(350).fadeOut('slow'); // will fade out the white DIV that covers the website.
+                // $('.loader-item').fadeOut(); // will first fade out the loading animation
+                //     $('#pageloader').delay(350).fadeOut('slow'); // will fade out the white DIV that covers the website.
                 $('body').delay(350).css({'overflow-y':'visible'});
             })
             //]]>

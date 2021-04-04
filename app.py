@@ -1,22 +1,22 @@
 import numpy as np
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 import flask
 import pickle
 import os
 import random
 import knn_images
+import vqa_main
 
 app = Flask(__name__)
-app._static_folder = os.path.abspath("templates/static/")
 #model = pickle.load(open('model.pkl', 'rb'))
 
 @app.route('/')
 def home():
 
 	
-	return start()
+	#return start()
 	#return flask.jsonify(data)  
-	#return render_template('index.html')
+	return render_template('guessWhich.html')
 
 
 @app.route('/predict',methods=['POST'])
@@ -35,12 +35,11 @@ def predict():
 @app.route('/start_game',methods=['POST'])
 def start():
 	image_idx = random.randint(0,1000)
-	print(image_idx)
-	all_idx = knn_images.get_nearest_images_idx(image_idx) #TODO no ficheiro tem que se fazer um metodo que receba um idx e que retorne um array de idx
+	all_idx, chosen = knn_images.get_nearest_images_idx(image_idx) 
 	print("all idxs",all_idx)
 	data = {}
-	data['Indexes'] = [str(x) for x in all_idx]
-	data['Chosen'] = str(image_idx) + ".jpg"
+	data['Indexes'] = [str(x) + ".jpg" for x in all_idx]
+	data['Chosen'] = str(chosen) + ".jpg"
 
 	return flask.jsonify(data)  
 
@@ -73,7 +72,9 @@ def ask():
     return flask.jsonify(data)
 
 
-
+@app.route('/favicon.ico') 
+def favicon(): 
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 
