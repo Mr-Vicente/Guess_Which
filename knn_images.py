@@ -97,14 +97,12 @@ def find_topK_similar_simple(encodings, image_index, k=5):
 
 def obtain_similiar_images(top_k_indicies):
     dir_files = os.listdir(DATA_DIR)
+    print(len(dir_files))
     sorted_dir_files = sorted(dir_files)
-    print(dir_files)
-    similar_images = np.array(sorted_dir_files)
-    similar_images = similar_images[top_k_indicies]
-    np_dir_files = np.array(similar_images)
-    np_sel_dir_files = np_dir_files[similar_images]
+    np_dir_files = np.array(sorted_dir_files)
+    np_sim_dir_files = np_dir_files[top_k_indicies]
     filenames_index = lambda s: s[:-4]
-    indexes = filenames_index(np_sel_dir_files)
+    indexes = filenames_index(np_sim_dir_files)
     return indexes.tolist()
 
 
