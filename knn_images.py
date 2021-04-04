@@ -97,8 +97,8 @@ def findTopKSimilar_simple(encodings, image_index, k=5):
 
 def obtain_similiar_images(top_k_indicies):
     dir_files = os.listdir(DATA_DIR)
-    print(len(dir_files))
     sorted_dir_files = sorted(dir_files)
+    print(dir_files)
     similar_images = np.array(sorted_dir_files)
     similar_images = similar_images[top_k_indicies]
     return similar_images
@@ -131,7 +131,7 @@ def prepare_encodings_good():
     encodings = None
     for enc_name in sorted(os.listdir(feats_dir)):
         _encodings = np.load(f'{feats_dir}/{enc_name}', 'r', allow_pickle=True)
-        _encodings = _encodings['encodings'].detach().cpu().numpy()
+        _encodings = _encodings['encodings']
         if encodings is None:
             encodings = _encodings
         else:
