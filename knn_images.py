@@ -100,7 +100,8 @@ def find_topK_similar_simple(encodings, image_index, k=5):
 def obtain_similiar_images(top_k_indicies, chosen_idx):
     dir_files = os.listdir(DATA_DIR)
     sorted_dir_files = sorted(dir_files)
-    sorted_dir_files.remove(".comments")
+    if sorted_dir_files.count(".comments"):
+        sorted_dir_files.remove(".comments")
     print(sorted_dir_files)
     np_dir_files = np.array(sorted_dir_files)
     np_sim_dir_files = np_dir_files[top_k_indicies]
