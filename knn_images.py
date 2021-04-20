@@ -55,7 +55,7 @@ def create_images_encoding(vgg, data_loader):
 
 
 def L2_NORM(img_enc_sel, img_enc_inf):
-    return torch.norm(((img_enc_sel * img_enc_inf)), 2, -1)
+    return ((img_enc_sel-img_enc_inf)**2).sum(axis=0)
 
 
 def find_topK_similar(data_loader, encodings, image_index, k=5):
@@ -76,7 +76,7 @@ def find_topK_similar(data_loader, encodings, image_index, k=5):
             distances.append(distance)
             # print("Torch NORM L2 Distance is : ", distance)
         index += batch_size
-    distances_topK_indicies = np.argpartition(distances, -k)[-k:]
+    distances_topK_indicies = np.argpartition(distances, k)[:k]
     distances = np.array(distances)
     return distances[distances_topK_indicies], distances_topK_indicies
 
@@ -85,12 +85,14 @@ def find_topK_similar_simple(encodings, image_index, k=5):
     distances = []
     for image_idx in range(encodings.shape[0]):
         sel_img_encoding = torch.tensor(encodings[image_index])
+        if image_index == image_idx:
+            continue
         curr_img_encoding = torch.tensor(encodings[image_idx])
         distance = L2_NORM(sel_img_encoding, curr_img_encoding)
         if torch.cuda.is_available():
             distance = distance.detach().cpu().numpy()
         distances.append(distance)
-    distances_topK_indicies = np.argpartition(distances, -k)[-k:]
+    distances_topK_indicies = np.argpartition(distances, k)[:k]
     distances = np.array(distances)
     return distances[distances_topK_indicies], distances_topK_indicies
 
