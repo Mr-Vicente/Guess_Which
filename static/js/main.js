@@ -103,29 +103,37 @@ jQuery(document).ready(function($) {
 
 var images_to_guess = [];
 var chosen_image;
+var difficulty = 1;
 
 var i_think_not = [];
 for (var i = 0; i < images_to_guess.length; i++) {
     i_think_not.push(false);
 }
 
+
+function changeDifficulty(level){
+    difficulty = level;
+    var display = document.getElementById("apply_changes");
+    display.innerHTML="Please press 'New Game' to apply changes";
+}
+
+
 async function displayImages() {
     if (images_to_guess.length == 0)
         await newGame(false);
     var display = document.getElementById("image_display");
-    console.log(images_to_guess)
+    display.innerHTML="";
     for (var i in images_to_guess) {
-        console.log("estou no for")
         var div1 = document.createElement("div");
         div1.className = "overlay-b";
         div1.id = "overlay_".concat(i.toString());
-        div1.innerHTML = ` <div class="overlay-inner">
-                            
-                           </div>`;
+        div1.innerHTML =
+            `<div class="overlay-inner">
+                 <a-yes id="yes_`+ i +`" class="fa fa-check" onclick="guessImage(this,`+ i +`)" ></a-yes>
+                 <a-no class="fa fa-times" onclick="guessNot(this,`+ i +`)"></a-no>
+             </div>`;
 
-        //<a-yes class="fa fa-check" onclick="guessImage(this,`+ i +`)" ></a-yes>
-        //<a-no class="fa fa-times" onclick="guessNot(this,`+i+`)"></a-no>
-        
+
         var img = document.createElement("img");
         img.src = '../static/images/' + images_to_guess[i];
 
@@ -144,24 +152,21 @@ async function displayImages() {
 }
 
 function guessImage(element, i) {
+
+    if(i_think_not[i]){
+        return;
+    }
+
     var overlay = document.getElementById("overlay_".concat(i.toString()));
-    
+
     overlay.style = `opacity: 1;
                     visibility: visible;
                     `;
-    
+
     var modal = document.getElementById("pop-up");
-    var span = document.getElementsByClassName("close")[0];
     var title = document.getElementById("pop-up-title");
     var text = document.getElementById("pop-up-text");
-    window.onclick = function (event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-    span.onclick = function () {
-        modal.style.display = "none";
-    }
+
 
     if (chosen_image === images_to_guess[i]) {
         //WON
@@ -176,27 +181,54 @@ function guessImage(element, i) {
         element.style.color = "#db2e2e";
     }
     modal.style.display = "block";
+    modal.style.backdrop = 'static';
+    modal.style.keyboard = false;
+
+
 }
 
 function guessNot(element, i) {
     var overlay = document.getElementById("overlay_".concat(i.toString()));
-    if (i_think_not[i]) {
+    /*if (i_think_not[i]) {
         element.style.color = "white";
         overlay.style = `opacity: 0;
                     visibility: hidden;
                     `;
     } else {
-        element.style.color = "#db2e2e";
+         element.style.color = "#db2e2e";
+                overlay.style = `opacity: 1;
+                            visibility: visible;
+                            `;
+    }
+    i_think_not[i] = !i_think_not[i];
+    */
+    element.style.color = "#db2e2e";
         overlay.style = `opacity: 1;
                     visibility: visible;
                     `;
-    }
-    i_think_not[i] = !i_think_not[i];
+    i_think_not[i] = true;
+    var yes = document.getElementById("yes_".concat(i.toString()));
+    yes.style.color = "white";
 }
 
+
+function _setDifficulty(level){
+    var ele = document.getElementsByName('difficulty');
+    for(i = 0; i < ele.length; i++) {
+        if(ele[i].value == level)
+            ele[i].checked = "checked";
+    }
+}
+
+
 async function newGame(pressed) {
-    document.getElementById("new_button").style.color = "red";
-    await $.post("/start_game",
+
+    var apply = document.getElementById("apply_changes");
+    apply.innerHTML="";
+
+    _setDifficulty(difficulty);
+
+    await $.post("/start_game", {"difficulty": difficulty},
         function (data) {
             var response = data
             chosen_image = response.Chosen;
@@ -207,17 +239,19 @@ async function newGame(pressed) {
             console.log(images_to_guess)
         }
     );
-    if(pressed)
-        location.reload();
+    if(pressed){
+        await displayImages();
+    }
+    var modal = document.getElementById("pop-up");
+    modal.style.display = "none";
+
 }
 
 function randomNumber(min, max) { 
     return Math.random() * (max - min) + min;
 } 
 
-
 function ask(input_question) {
-    //document.getElementById("answer").innerHTML = "LMAO";
     $.post("/ask",
         { "id": chosen_image, "question": input_question },
         function (data) {

@@ -9,6 +9,7 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
   border: 0;
   font-size: 100%;
   vertical-align: baseline;
+  font-family:"Roboto Slab", serif;
 }
 
 body {
@@ -111,12 +112,14 @@ textarea {
   margin: 0;
   vertical-align: baseline;
   *vertical-align: middle;
+  font-family:"Roboto Slab", serif;
 }
 
 button,
 input {
   line-height: normal;
   *overflow: visible;
+  font-family:"Roboto Slab", serif;
 }
 
 button::-moz-focus-inner,
@@ -131,6 +134,7 @@ input[type="reset"],
 input[type="submit"] {
   cursor: pointer;
   -webkit-appearance: button;
+  font-family:"Roboto Slab", serif;
 }
 
 input[type="search"] {

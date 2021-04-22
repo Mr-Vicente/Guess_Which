@@ -34,11 +34,11 @@
 
     </head>
     <body onload="displayImages()">
-        <!--section id="pageloader">
+        <section id="pageloader">
             <div class="loader-item fa fa-spin colored-border"></div>
-        </section--> <!-- /#pageloader -->
+        </section> <!-- /#pageloader -->
 
-        <!--header class="site-header container-fluid">
+        <header-- class="site-header container-fluid">
             <div class="top-header">
                 <div class="logo col-md-6 col-sm-6">
                     <h1><em>Guess</em>Which</h1>
@@ -52,29 +52,49 @@
                 <div id="pop-up" class="modal">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <span class="close">&times;</span>
                             <h2 id="pop-up-title"></h2>
                         </div>
-                        <p id="pop-up-text"></p>
+                        <p style="margin-top: 20px" id="pop-up-text"></p>
+                        <button class="cute-button" id="new_button" onclick="newGame(true)" style="margin-top: 20px">New Game</button>
                     </div>
 
                 </div>
                 <div class="row" id="image_display"></div> <!-- /.row -->
             </div>
             <div class="col_two">
-                <button id="new_button" onclick="newGame(true)">New Game</button>
-
-                <div id="QA">
-                    <label for="question">Question:</label>
+                <h2 style="font-size: large; margin-bottom: 20px">Ask me about the image</h2>
+                <div id="QA" >
+                    <label style="font-weight: bold" for="question">Question:</label>
                     <input type="text" id="question">
-                    <p></p>
-                    <label for="answer">Answer:</label>
-                    <p id="answer">  </p>
-                    <p></p>
-                    <button id="ask_button" onclick="ask(question.value)">Ask</button>
+                    <p style="margin-top: 20px"></p>
+                    <label style="font-weight: bold" for="answer">Answer:</label>
+                    <div style="height: 50px">
+                        <p id="answer">  </p>
+                    </div>
+                    <button class="cute-button" id="ask_button" onclick="ask(question.value)">Ask</button>
                 </div>
-                
-                
+            </div>
+
+            <div class="col_two" style="margin-top: 20px">
+                <div style=" display: flex; justify-content: center; align-items: center;">
+                    <button class="cute-button" id="new_button" onclick="newGame(true)">New Game</button>
+                </div>
+                <div style="height: 160px;margin-top: 20px">
+                    <div id="form-wrapper">
+                        <form method="GET">
+                            <h1 id="form-title">Select Difficulty Level</h1>
+                            <div id="difficulty-slider">
+                                <input type="radio" name="difficulty" id="1" value="1"  onchange="changeDifficulty(1)" required>
+                                <label for="1" data-difficulty="Easy"></label>
+                                <input type="radio" name="difficulty" id="2" value="2"  onchange="changeDifficulty(2)" required>
+                                <label for="2" data-difficulty="Medium"></label>
+                                <input type="radio" name="difficulty" id="3" value="3"  onchange="changeDifficulty(3)" required>
+                                <label for="3" data-difficulty="Hard"></label>
+                            </div>
+                        </form>
+                    </div>
+                    <p class="mini-warning" id="apply_changes"></p>
+                </div>
             </div>
         </div> <!-- /.content-wrapper -->
 
@@ -84,8 +104,8 @@
         <script type="text/javascript">
             //<![CDATA[
             $(window).load(function() { // makes sure the whole site is loaded
-                // $('.loader-item').fadeOut(); // will first fade out the loading animation
-                //     $('#pageloader').delay(350).fadeOut('slow'); // will fade out the white DIV that covers the website.
+                 $('.loader-item').fadeOut(); // will first fade out the loading animation
+                     $('#pageloader').delay(350).fadeOut('slow'); // will fade out the white DIV that covers the website.
                 $('body').delay(350).css({'overflow-y':'visible'});
             })
             //]]>
