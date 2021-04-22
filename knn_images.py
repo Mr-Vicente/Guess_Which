@@ -6,6 +6,7 @@ from PIL import Image
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 import torch
+import random
 
 DATA_DIR = "./assets/images"
 
@@ -81,18 +82,27 @@ def find_topK_similar(data_loader, encodings, image_index, k=5):
     return distances[distances_topK_indicies], distances_topK_indicies
 
 
-def find_topK_similar_simple(encodings, image_index, k=5):
+def find_topK_similar_simple(encodings, image_index, k=5, difficulty=1):
     distances = []
+    k += 1
     for image_idx in range(encodings.shape[0]):
         sel_img_encoding = torch.tensor(encodings[image_index])
-        if image_index == image_idx:
-            continue
         curr_img_encoding = torch.tensor(encodings[image_idx])
         distance = L2_NORM(sel_img_encoding, curr_img_encoding)
         if torch.cuda.is_available():
             distance = distance.detach().cpu().numpy()
         distances.append(distance)
-    distances_topK_indicies = np.argpartition(distances, k)[:k]
+
+    span = int(random.random() * difficulty) * 10
+    range_ = span + k
+    distances_topK_indicies = np.argpartition(distances, range_)[:range_]
+    random_indicies = np.array(list(range(range_)))
+    np.random.shuffle(random_indicies)
+    y = [random_indicies[i] for i in range(k)]
+
+    indeces = np.array(y)
+    distances_topK_indicies = distances_topK_indicies[indeces]
+    distances_topK_indicies = np.delete(distances_topK_indicies, np.where(distances_topK_indicies == image_index))
     distances = np.array(distances)
     return distances[distances_topK_indicies], distances_topK_indicies
 
@@ -100,9 +110,7 @@ def find_topK_similar_simple(encodings, image_index, k=5):
 def obtain_similiar_images(top_k_indicies, chosen_idx):
     dir_files = os.listdir(DATA_DIR)
     sorted_dir_files = sorted(dir_files)
-    if sorted_dir_files.count(".comments"):
-        sorted_dir_files.remove(".comments")
-    print(sorted_dir_files)
+    #sorted_dir_files.remove(".comments")
     np_dir_files = np.array(sorted_dir_files)
     np_sim_dir_files = np_dir_files[top_k_indicies]
 
@@ -151,7 +159,7 @@ def prepare_encodings_vgg():
     return encodings
 
 
-def get_nearest_images_idx(chosen_idx):
+def get_nearest_images_idx(chosen_idx, difficulty=1):
     vgg = load_vgg()
     if torch.cuda.is_available():
         vgg.to('cuda')
@@ -161,7 +169,7 @@ def get_nearest_images_idx(chosen_idx):
     encodings = prepare_encodings_vgg()
     print(f'Chosenid: {chosen_idx}')
     print(f'Encoding shape: {encodings.shape}')
-    _, top_k_indicies = find_topK_similar_simple(encodings, chosen_idx, k=5)
+    _, top_k_indicies = find_topK_similar_simple(encodings, chosen_idx, k=5, difficulty=difficulty)
     print(f'Topk_indicies: {top_k_indicies}')
-    similar_images,chosen  = obtain_similiar_images(top_k_indicies, chosen_idx)
+    similar_images, chosen  = obtain_similiar_images(top_k_indicies, chosen_idx)
     return similar_images, chosen

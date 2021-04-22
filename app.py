@@ -34,14 +34,17 @@ def predict():
 
 @app.route('/start_game',methods=['POST'])
 def start():
-	image_idx = random.randint(0,1000)
-	all_idx, chosen = knn_images.get_nearest_images_idx(image_idx) 
-	print("all idxs",all_idx)
-	data = {}
-	data['Indexes'] = [str(x) + ".jpg" for x in all_idx]
-	data['Chosen'] = str(chosen) + ".jpg"
+    image_idx = random.randint(0,1000)
+    params = [str(x) for x in request.form.values()]
+    all_idx, chosen = knn_images.get_nearest_images_idx(image_idx, int(params[0]))
 
-	return flask.jsonify(data)  
+    print("CHOSEN (SERVER):", chosen)
+    print("all idxs",all_idx)
+    data = {}
+    data['Indexes'] = [str(x) + ".jpg" for x in all_idx]
+    data['Chosen'] = str(chosen) + ".jpg"
+
+    return flask.jsonify(data)
 
 
 @app.route('/ask',methods=['POST'])
