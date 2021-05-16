@@ -13,10 +13,10 @@ app = Flask(__name__)
 @app.route('/')
 def home():
 
-	
-	#return start()
-	#return flask.jsonify(data)  
-	return render_template('guessWhich.html')
+    
+    #return start()
+    #return flask.jsonify(data)  
+    return render_template('guessWhich.html')
 
 
 @app.route('/predict',methods=['POST'])
@@ -65,11 +65,18 @@ def ask():
     data = {}
 
     df = vqa_main.model_work(pic_name, question) #TODO neste tem de se fazer um metodo que receba o pic_name e a question e retorne as respostas e confianças (o dataframe)
-    if df['confidence'][0] < 0.50:
-    	data["Success"] = True
-    	data['Answer'] = "Couldn't understand the question. Please ask another one :D"
+    confidence = df['confidence'][0]
+    answer = df['answers'][0]
+    print(confidence)
+    if confidence < 50:
+        if confidence < 20:
+            data["Success"] = False
+            data['Answer'] = "Couldn't understand the question. Please ask another one :D"
+        else:
+            data["Success"] = True
+            data['Answer'] = "I'm not completely sure, but I think " + str(answer)
     else:
-    	data['Answer'] = df['answers'][0]
+        data['Answer'] = df['answers'][0]
 
     
     return flask.jsonify(data)
