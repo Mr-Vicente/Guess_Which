@@ -94,6 +94,18 @@ jQuery(document).ready(function($) {
             bloggingisotope();
             $(window).smartresize(bloggingisotope)
         })
+/************** OUR CODE after loading *********************/
+$(document).ready(function() {
+    var questionBox = document.getElementById("question")
+    questionBox.addEventListener("keyup", function(event) {
+  // Number 13 is the "Enter" key on the keyboard
+        console.log(event.keyCode)
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            document.getElementById("ask_button").click();
+        }
+    });
+});
 
 
 /************** OUR CODE *********************/
@@ -252,6 +264,7 @@ function randomNumber(min, max) {
 } 
 
 function ask(input_question) {
+    document.getElementById("answer").innerHTML = "...";
     $.post("/ask",
         { "id": chosen_image, "question": input_question },
         function (data) {
@@ -264,3 +277,4 @@ function ask(input_question) {
         }
     );
 }
+
