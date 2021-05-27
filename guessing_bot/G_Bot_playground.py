@@ -1,11 +1,7 @@
 from VQA_API import VQA
-import random
-import skimage.io as io
-import matplotlib.pyplot as plt
-import os
-
-from Guess_Bot import Guesser_Bot
+from G_Bot import G_Bot
 import bot_utils as ut
+import torch as T
 
 dataDir		=   '../../VQA_dataset'
 versionType =   'v2_' # this should be '' when using VQA v2.0 dataset
@@ -16,35 +12,20 @@ annFile     =   f'{dataDir}/Annotations/{versionType}{dataType}_{dataSubType}_an
 quesFile    =   f'{dataDir}/Questions/{versionType}{taskType}_{dataType}_{dataSubType}_questions.json'
 imgDir 		=   f'{dataDir}/Images/{dataType}/{dataSubType}/'
 
-def load_model():
-    return Guesser_Bot()
+params = {
+    'vocabSize': 20573,
+    'embedSize': 300,
+    'rnnHiddenSize': 512,
+    'dialogInputSize': 512,
+    'numLayers': 2,
+    'imgFeatureSize': 128,
+    'numRounds': 10,
+    'numEpochs': 10
+}
 
-def train_bot(bot, data):
-    bot.train(data)
-    return bot
-
-def load_data():
+def fetch_dataset(n_elementes):
     vqa = VQA(annFile, quesFile)
-    annIds = vqa.getQuesIds(quesTypes='how many')
-    anns = vqa.loadQA(annIds)
-    randomAnn = random.choice(anns)
-    vqa.showQA([randomAnn])
-    imgId = randomAnn['image_id']
-    imgFilename = f'COCO_{dataSubType}_{str(imgId).zfill(12)}.jpg'
-    if os.path.isfile(imgDir + imgFilename):
-        I = io.imread(imgDir + imgFilename)
-        plt.imshow(I)
-        plt.axis('off')
-        plt.show()
-
-def load_data_real():
-    vqa = VQA(annFile, quesFile)
-    a = ut.random_pool_input_generator(imgDir, dataSubType, vqa, 6)
-    print(a)
-
-def fetch_dataset():
-    vqa = VQA(annFile, quesFile)
-    valid_image_idx = ut.find_valid_images_idx(imgDir)[:10].tolist()
+    valid_image_idx = ut.find_valid_images_idx(imgDir)[:n_elementes].tolist()
     inputs = []
     for image_idx in valid_image_idx:
         model_input = {
@@ -59,11 +40,20 @@ def fetch_dataset():
         inputs.append(model_input)
     return inputs, valid_image_idx
 
+def load_dataset(token_to_idx):
+    # 1. create Dataset and DataLoader object
+    print("Creating Dataset and DataLoader\n")
+    Xs, Ys = fetch_dataset(10)
+    train_dataset = ut.VQDataset(Xs, Ys, token_to_idx)
+
+    batch_s = 2
+    train_dataloader = T.utils.data.DataLoader(train_dataset, batch_size=batch_s, shuffle=True)
+    return train_dataloader
+
 def main():
-    #bot = load_model()
-    #data = load_data_real()
-    #bot = train_bot(bot, data)
-    test()
+    guessing_bot = G_Bot(params)
+    train_dataloader = load_dataset(guessing_bot.token_to_ix)
+    guessing_bot.train(train_dataloader, params)
 
 if __name__ == "__main__":
     main()
