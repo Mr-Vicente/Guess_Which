@@ -18,8 +18,8 @@ params = {
     'rnnHiddenSize': 512,
     'dialogInputSize': 512,
     'numLayers': 2,
-    'imgFeatureSize': 128,
-    'numRounds': 10,
+    'imgFeatureSize': 2048,
+    'numRounds': 1,
     'numEpochs': 10
 }
 

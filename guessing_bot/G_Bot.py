@@ -23,6 +23,9 @@ class G_Bot(nn.Module):
         with open('../pickles/token_to_ix.pkl', 'rb') as f:
             self.token_to_ix = pickle.load(f)
 
+        with open('../pickles/resnet_encoding_dic.p', 'rb') as f:
+            self.image_encoding = pickle.load(f)
+
         print(self.token_to_ix)
 
     def reset(self):
@@ -68,7 +71,6 @@ class G_Bot(nn.Module):
 
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        image_encoding = {}
         # Iterating over dialog rounds
         def batch_iter(dataloader):
             for epochId in range(params['numEpochs']):
@@ -90,19 +92,18 @@ class G_Bot(nn.Module):
             answers_lens = Variable(batch['answers_lens'], requires_grad=False)
             target = Variable(batch['target'], requires_grad=False)
             for round in range(self.numRounds):
+                print('round: ', round)
                 self.encoder.reset()
                 self.encoder.observe(round, ques=questions, quesLens=questions_lens)
                 self.encoder.observe(round, ans=answers, ansLens=answers_lens)
 
                 encStates = self.encoder()
                 image_predictions = self.predictImage(encStates)
-                print('asdasda: ', len(image_predictions))
-                print('ttttt: ', image_predictions)
-                print('xxxx: ', target)
                 for i in range(len(image_predictions)):
                     image_prediction = image_predictions[i]
                     t_image = target[i].detach().cpu().numpy().tolist()
-                    target_image = image_encoding[str(t_image)]
+                    # t_image must exist in image_encoding or else: poof
+                    target_image = torch.tensor(self.image_encoding[t_image])
                     feat_dist = mse_criterion(image_prediction, target_image)
                     feat_dist = torch.mean(feat_dist)
                     loss += feat_dist
