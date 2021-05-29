@@ -20,7 +20,7 @@ params = {
     'numLayers': 2,
     'imgFeatureSize': 2048,
     'numRounds': 1,
-    'numEpochs': 10
+    'numEpochs': 1
 }
 
 def fetch_dataset(n_elementes):
@@ -53,7 +53,14 @@ def load_dataset(token_to_idx):
 def main():
     guessing_bot = G_Bot(params)
     train_dataloader = load_dataset(guessing_bot.token_to_ix)
+    guessing_bot.reset()
     guessing_bot.train(train_dataloader, params)
+    q_idx, a_idx = ut.convert_statements_to_idx("O que ser banana?", "", guessing_bot.token_to_ix)
+    q_idx_2, a_idx_2 = ut.convert_statements_to_idx("O que ser banana?", "", guessing_bot.token_to_ix)
+    q, a, ql, al = T.tensor([q_idx,q_idx_2]), T.tensor([a_idx,a_idx_2]), T.tensor([1,1]), T.tensor([1,1])
+    guessing_bot.observe(ques=q, anws=a,ql=ql,al=al)
+    idx = guessing_bot()
+    print(idx)
 
 if __name__ == "__main__":
     main()

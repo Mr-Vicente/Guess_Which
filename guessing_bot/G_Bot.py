@@ -1,8 +1,10 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from VQ_encoder import QA_Encoder
 from torch.autograd import Variable
+import bot_utils as ut
 import pickle
 
 class G_Bot(nn.Module):
@@ -26,30 +28,41 @@ class G_Bot(nn.Module):
         with open('../pickles/resnet_encoding_dic.p', 'rb') as f:
             self.image_encoding = pickle.load(f)
 
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
         print(self.token_to_ix)
+        self.reset()
 
     def reset(self):
         '''Delete dialog history.'''
         self.questions = []
+        self.answers = []
         self.encoder.reset()
 
-    def observe(self, round, ques=None):
-        '''
-        Update Q-Bot percepts.
-        '''
+    def observe(self, ques=None, anws=None, ql=None, al=None):
         if ques is not None:
-            assert round == len(self.questions), \
-                "Round number does not match number of questions observed"
             self.questions.append(ques)
-        self.encoder.observe(round, ques=ques)
+            self.answers.append(ques)
+        self.encoder.observe(-1, ques=ques,quesLens=ql)
+        self.encoder.observe(-1,ans=anws, ansLens=al)
 
-    def forward(self):
+    def forward(self, x=None):
         '''
         Forward pass the last observed question
         '''
         encStates = self.encoder()
         imageEnconding = self.predictImage(encStates)
-        return imageEnconding
+        if x == None:
+            x = self.image_encoding.values()
+        distances = []
+        for enc in x:
+            dist = ut.calc_distance(enc, imageEnconding)
+            distances.append(dist)
+        distances = np.array(distances)
+        indices = np.argsort(distances)
+        distances_ordered = distances[indices]
+        print(distances_ordered)
+        return indices[0]
 
     def predictImage(self,encStates):
         '''
@@ -66,10 +79,9 @@ class G_Bot(nn.Module):
     def train(self, dataloader, params):
         lRate = 0.001
         #paramters
-        optimizer = optim.Adam(self.encoder.parameters(), lr=lRate)
+        opt_parameters = list(self.encoder.parameters()) + list(self.featureNet.parameters())
+        optimizer = optim.Adam(opt_parameters, lr=lRate)
         mse_criterion = nn.MSELoss(reduce=False)
-
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         # Iterating over dialog rounds
         def batch_iter(dataloader):
@@ -103,7 +115,7 @@ class G_Bot(nn.Module):
                     image_prediction = image_predictions[i]
                     t_image = target[i].detach().cpu().numpy().tolist()
                     # t_image must exist in image_encoding or else: poof
-                    target_image = torch.tensor(self.image_encoding[t_image])
+                    target_image = torch.tensor(self.image_encoding[str(9)])
                     feat_dist = mse_criterion(image_prediction, target_image)
                     feat_dist = torch.mean(feat_dist)
                     loss += feat_dist

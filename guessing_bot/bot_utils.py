@@ -2,6 +2,7 @@ import torch as T
 import numpy as np
 import os
 import preprocess as p
+import math
 
 def find_valid_images_idx(path):
     filenames = os.listdir(path)
@@ -59,6 +60,10 @@ def multiple_input(dataSubType, n_images, vqa, pool_size):
         inputs.append(single_input)
     inputs = np.array(inputs)
     return inputs
+
+def calc_distance(img_enc_sel, img_enc_inf):
+    return math.sqrt(((img_enc_sel-img_enc_inf)**2).sum(axis=0))
+
 
 # ---------------------------------------------------
 
@@ -122,4 +127,11 @@ class VQDataset(T.utils.data.Dataset):
 
 
 # ---------------------------------------------------
+
+
+def convert_statements_to_idx(question, answer, token_to_ix):
+    proc_statement = p.proc_ques
+    ques_ix = proc_statement(question, token_to_ix, max_token=14)
+    ans_ix = proc_statement(answer, token_to_ix, max_token=14)
+    return ques_ix, ans_ix
 

@@ -64,18 +64,20 @@ class QA_Encoder(nn.Module):
         for ease in computing final time step hidden states of each RNN
         '''
         if ques is not None:
-            assert round == len(self.questionEmbeds)
+            #assert round == len(self.questionEmbeds)
             assert quesLens is not None, "Questions lengths required!"
             ques, quesLens = self.processSequence(ques, quesLens)
             self.questionTokens.append(ques)
             self.questionLens.append(quesLens)
             self.batchSize = 2#len(self.questionTokens)
         if ans is not None:
-            assert round == len(self.answerEmbeds)
+            #assert round == len(self.answerEmbeds)
             assert ansLens is not None, "Answer lengths required!"
             ans, ansLens = self.processSequence(ans, ansLens)
             self.answerTokens.append(ans)
             self.answerLengths.append(ansLens)
+        #if round==-1:
+        #    self.batchSize = 1
 
     def processSequence(self, seq, seqLen):
         ''' Strip <START> and <END> token from a left-aligned sequence'''
