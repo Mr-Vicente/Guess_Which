@@ -4,14 +4,18 @@ import torch
 import pandas as pd
 import numpy as np
 
-def model_work(image_id, question):
-    vqa_object = VQA('mfb')
-    image_idx = image_id[:-4]
+def model_work(image_id, question, encoding=None):
 
     #image = np.array(Image.open(f'{DATA_DIR}/{image_idx}.jpg').convert('RGB'))
-    feats = np.load(f'assets/feats/{image_idx}.npz')
-
-    image_feat = torch.tensor(feats['x'].T)  # (num_objects, 2048)
+    if image_id==None:
+        vqa_object = VQA('mfb', 'eval')
+        image_feat = torch.tensor([encoding])  # (num_objects, 2048)
+        print(image_feat.size())
+    else:
+        image_idx = image_id[:-4]
+        vqa_object = VQA('mfb')
+        feats = np.load(f'assets/feats/{image_idx}.npz')
+        image_feat = torch.tensor(feats['x'].T)  # (num_objects, 2048)
 
     ret = vqa_object.inference(question, image_feat)
     soft_proj = torch.softmax(ret['proj_feat'], dim=-1)

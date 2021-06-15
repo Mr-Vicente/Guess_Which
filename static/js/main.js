@@ -147,7 +147,7 @@ async function displayImages() {
 
 
         var img = document.createElement("img");
-        img.src = '../static/images/' + images_to_guess[i];
+        img.src = '../static/VQA_dataset/Images/mscoco/val2014/' + images_to_guess[i];
 
         var div3 = document.createElement("div");
         div3.className = "blog-thumb";
@@ -237,7 +237,7 @@ async function newGame(pressed) {
 
     var apply = document.getElementById("apply_changes");
     apply.innerHTML="";
-
+    document.getElementById("imagesrc").src = "../static/bot_shrug.png"  //aqui é esta
     _setDifficulty(difficulty);
 
     await $.post("/start_game", {"difficulty": difficulty},
@@ -262,8 +262,9 @@ async function newGame(pressed) {
 function randomNumber(min, max) { 
     return Math.random() * (max - min) + min;
 } 
-
+var nGuesses = 0
 function ask(input_question) {
+    nGuesses+=1
     document.getElementById("answer").innerHTML = "...";
     $.post("/ask",
         { "id": chosen_image, "question": input_question },
@@ -273,7 +274,11 @@ function ask(input_question) {
             /*if (success == false)
                 showRIPIcon();*/
             var answer = response.Answer;
+            var guess = response.Bot_guess;
+            console.log(guess);
             document.getElementById("answer").innerHTML = answer;
+            document.getElementById("imagesrc").src = '../static/VQA_dataset/Images/mscoco/val2014/'+guess   //é esta que tens de mudar e vê se o path esstá certo
+
         }
     );
 }

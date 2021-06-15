@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-import utils
+import guessing_bot.utils as utils
 
 class QA_Encoder(nn.Module):
     def __init__(self, vocabSize, embedSize, rnnHiddenSize, dialogInputSize, numLayers):
@@ -63,25 +63,29 @@ class QA_Encoder(nn.Module):
         right-padded). Internally this alignment is changed to right-align
         for ease in computing final time step hidden states of each RNN
         '''
+        print("ajhsgdjahgs: ", ques,
+                ans,
+                quesLens,
+                ansLens)
         if ques is not None:
             #assert round == len(self.questionEmbeds)
             assert quesLens is not None, "Questions lengths required!"
-            ques, quesLens = self.processSequence(ques, quesLens)
+            #ques, quesLens = self.processSequence(ques, quesLens)
             self.questionTokens.append(ques)
             self.questionLens.append(quesLens)
-            self.batchSize = 2#len(self.questionTokens)
+            self.batchSize = 1 #len(self.questionTokens)
         if ans is not None:
             #assert round == len(self.answerEmbeds)
             assert ansLens is not None, "Answer lengths required!"
-            ans, ansLens = self.processSequence(ans, ansLens)
+            #ans, ansLens = self.processSequence(ans, ansLens)
             self.answerTokens.append(ans)
             self.answerLengths.append(ansLens)
         #if round==-1:
         #    self.batchSize = 1
 
-    def processSequence(self, seq, seqLen):
+    """def processSequence(self, seq, seqLen):
         ''' Strip <START> and <END> token from a left-aligned sequence'''
-        return seq[:, 1:], seqLen - 1
+        return seq[:, 1:], seqLen - 1"""
 
     def embedInputDialog(self):
         '''
@@ -110,10 +114,13 @@ class QA_Encoder(nn.Module):
         ansTokens, ansLens = \
             self.answerTokens[factIdx], self.answerLengths[factIdx]
 
+        #print('hey222', quesTokens, quesLens, ansTokens, ansLens)
         qaTokens = utils.concatPaddedSequences(
             quesTokens, quesLens, ansTokens, ansLens, padding='right')
-        qa = self.wordEmbed(qaTokens)
+        #print('dfuk: ', qaTokens, quesLens)
+        qa = self.wordEmbed(qaTokens).unsqueeze(0)
         qaLens = quesLens + ansLens
+        #print('dfuk_2: ', qaLens)
         qaEmbed, states = utils.dynamicRNN(
             self.factRNN, qa, qaLens, returnStates=True)
         factEmbed = qaEmbed

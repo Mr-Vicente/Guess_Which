@@ -2,9 +2,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from VQ_encoder import QA_Encoder
+from guessing_bot.VQ_encoder import QA_Encoder
 from torch.autograd import Variable
-import bot_utils as ut
+import guessing_bot.bot_utils as ut
 import pickle
 
 class G_Bot(nn.Module):
@@ -22,15 +22,16 @@ class G_Bot(nn.Module):
         self.featureNet = nn.Linear(self.rnnHiddenSize, self.imgFeatureSize)
         self.featureNetInputDropout = nn.Dropout(0.5)
 
-        with open('../pickles/token_to_ix.pkl', 'rb') as f:
+        with open('./pickles/token_to_ix.pkl', 'rb') as f:
             self.token_to_ix = pickle.load(f)
 
-        with open('../pickles/resnet_encoding_dic.p', 'rb') as f:
+        with open('./pickles/image_encodings.p', 'rb') as f:
             self.image_encoding = pickle.load(f)
 
+        print(self.image_encoding)
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        print(self.token_to_ix)
+        #print(self.token_to_ix)
         self.reset()
 
     def reset(self):
@@ -44,16 +45,18 @@ class G_Bot(nn.Module):
             self.questions.append(ques)
             self.answers.append(ques)
         self.encoder.observe(-1, ques=ques,quesLens=ql)
-        self.encoder.observe(-1,ans=anws, ansLens=al)
+        self.encoder.observe(-1, ans=anws, ansLens=al)
 
-    def forward(self, x=None):
+    def forward(self, y, x=None):
         '''
         Forward pass the last observed question
         '''
         encStates = self.encoder()
-        imageEnconding = self.predictImage(encStates)
+        imageEnconding = self.predictImage(encStates)[-1]
+        imageEnconding = imageEnconding.detach().numpy()
         if x == None:
-            x = self.image_encoding.values()
+            x = [enc for idx, enc in self.image_encoding.items() if int(idx) in y]
+            #x = self.image_encoding.values()
         distances = []
         for enc in x:
             dist = ut.calc_distance(enc, imageEnconding)
@@ -62,18 +65,13 @@ class G_Bot(nn.Module):
         indices = np.argsort(distances)
         distances_ordered = distances[indices]
         print(distances_ordered)
-        return indices[0]
+        return  indices[0]
+
 
     def predictImage(self,encStates):
-        '''
-        Predict/guess an fc7 vector given the current conversation history. This can
-        be called at round 0 after the caption is observed, and at end of every round
-        (after a response from A-Bot is observed).
-        '''
         # h, c from lstm
         h, c = encStates
         return self.featureNet(self.featureNetInputDropout(h[-1]))
-
 
 
     def train(self, dataloader, params):
@@ -106,16 +104,16 @@ class G_Bot(nn.Module):
             for round in range(self.numRounds):
                 print('round: ', round)
                 self.encoder.reset()
-                self.encoder.observe(round, ques=questions, quesLens=questions_lens)
-                self.encoder.observe(round, ans=answers, ansLens=answers_lens)
+                self.encoder.observe(round, ques=questions[0][round].unsqueeze(0), quesLens=questions_lens[0][round].unsqueeze(0).unsqueeze(0))
+                self.encoder.observe(round, ans=answers[0][round].unsqueeze(0), ansLens=answers_lens[0][round].unsqueeze(0).unsqueeze(0))
 
                 encStates = self.encoder()
                 image_predictions = self.predictImage(encStates)
                 for i in range(len(image_predictions)):
                     image_prediction = image_predictions[i]
                     t_image = target[i].detach().cpu().numpy().tolist()
-                    # t_image must exist in image_encoding or else: poof
-                    target_image = torch.tensor(self.image_encoding[str(9)])
+                    # t_image must exist in image_encoding or else: poof #str(9)
+                    target_image = torch.tensor(self.image_encoding[str(t_image)])
                     feat_dist = mse_criterion(image_prediction, target_image)
                     feat_dist = torch.mean(feat_dist)
                     loss += feat_dist

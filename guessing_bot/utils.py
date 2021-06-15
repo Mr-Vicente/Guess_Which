@@ -74,8 +74,9 @@ def concatPaddedSequences(seq1, seqLens1, seq2, seqLens2, padding='right'):
     maxCatLen = cat_seq.size(1)
     batchSize = seq1.size(0)
     for b_idx in range(batchSize):
-        len_1 = seqLens1[b_idx]
-        len_2 = seqLens2[b_idx]
+        print('hey: ', seqLens1)
+        len_1 = seqLens1[0][b_idx]
+        len_2 = seqLens2[0][b_idx]
 
         cat_len_ = len_1 + len_2
         if cat_len_ == 0:

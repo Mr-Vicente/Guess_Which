@@ -86,18 +86,18 @@ def find_topK_similar(data_loader, encodings, image_index, k=5):
 
 
 def find_topK_similar_simple(encodings, image_index, k=5, difficulty=1):
-    distances = []
-    sel_img_encoding = torch.tensor(encodings[image_index])
-    for image_idx in range(encodings.shape[0]):
-        curr_img_encoding = torch.tensor(encodings[image_idx])
+    distances = {}
+    sel_img_encoding = torch.tensor(encodings[str(image_index)])
+    for image_idx, encoding in encodings.items():
+        curr_img_encoding = torch.tensor(encoding)
         distance = L2_NORM(sel_img_encoding, curr_img_encoding)
         if torch.cuda.is_available():
             distance = distance.detach().cpu().numpy()
-        distances.append(distance)
+        distances[str(image_idx)] = distance
 
-    return difficulty_img_selection(k,difficulty,np.array(distances))
+    return difficulty_img_selection(k,difficulty, distances)
 
-def difficulty_img_selection(k, difficulty, distances):
+def difficulty_img_selection(k, difficulty, distances_dict):
     range_inf_idx = []
     range_sup_idx = []
     x1 = 20.0
@@ -105,7 +105,9 @@ def difficulty_img_selection(k, difficulty, distances):
     x3 = 22.75
     x4 = 24.0
 
-    dist_size = distances.shape[0]
+    dist_size = len(list(distances_dict.keys()))
+    # indices = sorted(distances, key=distances.get)[::-1]
+    distances = np.array(list(distances_dict.values()))
     indices = np.argsort(distances)
     distances_ordered = distances[indices]
 
@@ -147,16 +149,18 @@ def difficulty_img_selection(k, difficulty, distances):
         difficulty_range_idx = np.array(range_inf_idx)
     #difficulty_range_idx = np.append(np.array(range_inf_idx), np.array(range_sup_idx)).astype(int)  # por algum motivo estava a transformar num vetor de floats
     if len(difficulty_range_idx) == 0:
-        _, difficulty_range_idx = difficulty_img_selection(k, difficulty + 1, distances) # nunca vai ser chamado no quando se esta no nivel dificil
+        _, _, difficulty_range_idx = difficulty_img_selection(k, difficulty + 1, distances_dict) # nunca vai ser chamado no quando se esta no nivel dificil
+        print('masdsd')
     np.random.shuffle(difficulty_range_idx)
     difficulty_range_idx = difficulty_range_idx[:k]
 
     print("Range Inf: {}".format(range_inf_idx))
     print("Range Sup: {}".format(range_sup_idx))
     print("Range Total: {}".format(difficulty_range_idx))
-    print("Presented distances: {}".format(distances[difficulty_range_idx]))
+    #print("Presented distances: {}".format(distances[difficulty_range_idx]))
 
-    return distances[difficulty_range_idx], difficulty_range_idx
+    distances_idxs = np.array(list(distances_dict.keys()))
+    return distances[difficulty_range_idx], distances_idxs[difficulty_range_idx], difficulty_range_idx
 
 
 def obtain_similiar_images(top_k_indicies, chosen_idx):
@@ -211,17 +215,10 @@ def prepare_encodings_resnet():
     return encodings
 
 
-def get_nearest_images_idx(chosen_idx, difficulty=1):
-    resnet = load_resnet()
-    if torch.cuda.is_available():
-        resnet.to('cuda')
-
-    # data_loader = loading_data()
-    # encodings = create_images_encoding(vgg, data_loader)
-    encodings = prepare_encodings_resnet()
+def get_nearest_images_idx(chosen_idx, encodings, difficulty=1):
     print(f'Chosenid: {chosen_idx}')
-    print(f'Encoding shape: {encodings.shape}')
-    _, top_k_indicies = find_topK_similar_simple(encodings, chosen_idx, k=5, difficulty=difficulty)
+    #print(f'Encoding shape: {encodings.shape}')
+    _, top_k_indicies, _ = find_topK_similar_simple(encodings, chosen_idx, k=5, difficulty=difficulty)
     print(f'Topk_indicies: {top_k_indicies}')
-    similar_images, chosen  = obtain_similiar_images(top_k_indicies, chosen_idx)
-    return similar_images, chosen
+    #similar_images, chosen  = obtain_similiar_images(top_k_indicies, chosen_idx)
+    return top_k_indicies, chosen_idx

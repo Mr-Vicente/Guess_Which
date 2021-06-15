@@ -11,7 +11,7 @@ import os
 
 class VQA():
 
-    def __init__(self, model_name):
+    def __init__(self, model_name, code):
         """
         Args:
             model_name (str): The corrected model string ('mfb', 'mcan', etc)
@@ -19,8 +19,10 @@ class VQA():
 
         # such as 'mfb', 'mcan' etc.
         self.model_name = model_name
+        self.code = code
 
-        with open(f'configs/{self.model_name}.yml', 'r') as f:
+        path = './' if code == 'eval' else ''
+        with open(path+f'configs/{self.model_name}.yml', 'r') as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
             self.config = DotMap(self.config)
 
@@ -29,7 +31,8 @@ class VQA():
 
         self.net = self.get_net(self.model_name)
 
-        with open('pickles/dataset.pkl', 'rb') as f:
+        path = './' if code == 'eval' else ''
+        with open(path+'pickles/dataset.pkl', 'rb') as f:
             dataset = pickle.load(f)
 
         self.token_to_ix = dataset['token_to_ix']
@@ -54,7 +57,8 @@ class VQA():
             #gdown.download(url, output, quiet=False)
             pass
 
-        net.load_state_dict(torch.load(f'./pickles/{model_name}.pkl', map_location='cpu')['state_dict'],
+        path = './' if self.code == 'eval' else './'
+        net.load_state_dict(torch.load(path+f'pickles/{model_name}.pkl', map_location='cpu')['state_dict'],
                             strict=False)
 
         return net

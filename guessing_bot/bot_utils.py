@@ -5,7 +5,7 @@ import preprocess as p
 import math
 
 def find_valid_images_idx(path):
-    filenames = os.listdir(path)
+    filenames = sorted(os.listdir(path))
     images_idx = np.array([filename_2_idx(filename) for filename in filenames])
     return images_idx
 
@@ -93,7 +93,7 @@ class VQDataset(T.utils.data.Dataset):
         'answers': answers,
         'questions_lens' : questions_lens,
         'answers_lens': answers_lens,
-        'target' : target
+        'target' : T.tensor(int(target))
     }
     return sample
 
@@ -104,8 +104,9 @@ class VQDataset(T.utils.data.Dataset):
     answers = []
     answers_lens = []
     for X in Xs:
-      qs = []
-      aws = []
+      qs, qs_l = [],[]
+      aws, aws_l = [],[]
+
       for qa in X['QAs']:
           question = qa[0]
           answer = qa[1]
@@ -113,21 +114,19 @@ class VQDataset(T.utils.data.Dataset):
           ans_ix = proc_statement(answer, token_to_ix, max_token=14)
           qs.append(ques_ix)
           aws.append(ans_ix)
-      qs = qs[:3]
-      aws = aws[:3]
+          qs_l.append(len(ques_ix))
+          aws_l.append(len(ans_ix))
+      qs, qs_l = qs[:3], qs_l[:3]
+      aws, aws_l = aws[:3], aws_l[:3]
       questions.append(qs)
       answers.append(aws)
-      questions_lens.append(len(qs))
-      answers_lens.append(len(aws))
+      questions_lens.append(qs_l)
+      answers_lens.append(aws_l)
     questions, answers, questions_lens, answers_lens = np.array(questions), np.array(answers),\
                                                          np.array(questions_lens), np.array(answers_lens)
-
     return T.tensor(questions), T.tensor(answers), T.tensor(questions_lens), T.tensor(answers_lens)
 
-
-
 # ---------------------------------------------------
-
 
 def convert_statements_to_idx(question, answer, token_to_ix):
     proc_statement = p.proc_ques
