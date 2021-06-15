@@ -47,25 +47,24 @@ class G_Bot(nn.Module):
         self.encoder.observe(-1, ques=ques,quesLens=ql)
         self.encoder.observe(-1, ans=anws, ansLens=al)
 
-    def forward(self, y, x=None):
+    def forward(self, y, pool=None, x=None):
         '''
         Forward pass the last observed question
         '''
         encStates = self.encoder()
         imageEnconding = self.predictImage(encStates)[-1]
         imageEnconding = imageEnconding.detach().numpy()
+        distances = { }
         if x == None:
-            x = [enc for idx, enc in self.image_encoding.items() if int(idx) in y]
-            #x = self.image_encoding.values()
-        distances = []
-        for enc in x:
+            if pool==None:
+                x = [enc for idx, enc in self.image_encoding.items() if int(idx) in y]
+            else:
+                x = {str(k): self.image_encoding[str(k)] for k in pool}
+        for key,enc in x.items():
             dist = ut.calc_distance(enc, imageEnconding)
-            distances.append(dist)
-        distances = np.array(distances)
-        indices = np.argsort(distances)
-        distances_ordered = distances[indices]
-        print(distances_ordered)
-        return  indices[0]
+            distances[key] = dist
+        idx = sorted(distances, key=distances.get)[0]
+        return  int(idx)
 
 
     def predictImage(self,encStates):

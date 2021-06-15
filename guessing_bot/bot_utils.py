@@ -75,7 +75,7 @@ class VQDataset(T.utils.data.Dataset):
         = self.convert_dict_to_vec(Xs, token_to_ix)
 
     #self.x_data = [questions, answers]   #T.tensor([questions, answers]).to(self.device)
-    self.y_data = Ys                    #T.tensor(Ys).to(self.device)
+    self.y_data = T.tensor(Ys)                    #T.tensor(Ys).to(self.device)
 
   def __len__(self):
     return len(self.questions)  # required
@@ -93,7 +93,7 @@ class VQDataset(T.utils.data.Dataset):
         'answers': answers,
         'questions_lens' : questions_lens,
         'answers_lens': answers_lens,
-        'target' : T.tensor(int(target))
+        'target' : target
     }
     return sample
 

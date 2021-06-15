@@ -9,6 +9,7 @@ import vqa_main
 import guessing_bot.bot_utils as ut
 from guessing_bot.G_Bot import G_Bot
 import torch as T
+import pathlib
 
 dataDir		=   'static/VQA_dataset'
 versionType =   'v2_' # this should be '' when using VQA v2.0 dataset
@@ -36,8 +37,10 @@ params = {
 
 app = Flask(__name__)
 guessing_bot = G_Bot(params)
-#guessing_bot.load_state_dict(T.load(''))
+path = str(pathlib.Path().absolute())
+guessing_bot.load_state_dict(T.load(path+'/pickles/guess_bot.pkl'))
 #model = pickle.load(open('model.pkl', 'rb'))
+pool = []
 
 @app.route('/')
 def home():
@@ -46,10 +49,17 @@ def home():
 
 @app.route('/start_game',methods=['POST'])
 def start():
+    global pool
+    global guessing_bot
+    guessing_bot.reset()
+    guessing_bot.load_state_dict(T.load(path + '/pickles/guess_bot.pkl'))
+
     image_idx = random.randint(0,len(image_encoding.keys()))
     image_idx = list(image_encoding.keys())[image_idx]
     params = [str(x) for x in request.form.values()]
     all_idx, chosen = knn_images.get_nearest_images_idx(image_idx, image_encoding, int(params[0]))
+    pool = all_idx.tolist()
+    pool.append(chosen)
 
     print("CHOSEN (SERVER):", chosen)
     print("all idxs", all_idx)
@@ -81,8 +91,9 @@ def ask():
     idx = ut.filename_2_idx(pic_idx)
     print('ask_2: ', idx)
     encoding = image_encoding[str(idx)]
+    print(encoding)
 
-    df = vqa_main.model_work(None, question, encoding)
+    df = vqa_main.model_work(pic_idx, question, encoding)
     confidence = df['confidence'][0]
     answer = df['answers'][0]
     print(confidence)
@@ -96,18 +107,17 @@ def ask():
     else:
         data['Answer'] = df['answers'][0]
 
-    """
     y = [int(idx) for idx in image_encoding.keys()]
-    q_idx, a_idx = ut.convert_statements_to_idx("how many people?", "2", guessing_bot.token_to_ix)
+    answer = data['Answer']
+    q_idx, a_idx = ut.convert_statements_to_idx(question, answer, guessing_bot.token_to_ix)
     q, a = T.tensor(np.array([q_idx])), T.tensor(np.array([a_idx]))
     ql, al = T.tensor(np.array([[len(q_idx)]])), T.tensor(np.array([[len(a_idx)]]))
     guessing_bot.observe(ques=q, anws=a, ql=ql, al=al)
-    idx = guessing_bot(y=y)
-    real_idx = y[idx]
+    idx = guessing_bot(y=y, pool=pool)
+    real_idx = idx #y[idx]
     filename = ut.imgID_2_filename(dataSubType, real_idx)
     data["Bot_guess"] = filename
-    """
-    data["Bot_guess"] = "COCO_val2014_000000000164.jpg"
+    #data["Bot_guess"] = "COCO_val2014_000000000164.jpg"
 
 
     return flask.jsonify(data)

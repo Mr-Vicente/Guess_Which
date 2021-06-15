@@ -4,6 +4,7 @@ import bot_utils as ut
 import torch as T
 import pickle
 import numpy as np
+import pathlib
 
 dataDir		=   '../static/VQA_dataset'
 versionType =   'v2_' # this should be '' when using VQA v2.0 dataset
@@ -30,7 +31,7 @@ with open('../pickles/image_encodings.p', 'rb') as f:
 
 def fetch_dataset(n_elementes):
     vqa = VQA(annFile, quesFile)
-    valid_image_idx = list(image_encoding.keys())
+    valid_image_idx = [int(idx) for idx in image_encoding.keys()][:n_elementes]
     #valid_image_idx = ut.find_valid_images_idx(imgDir)[:n_elementes].tolist()
     print(valid_image_idx)
     inputs = []
@@ -62,7 +63,8 @@ def main():
     train_dataloader, idxs = load_dataset(guessing_bot.token_to_ix)
     guessing_bot.reset()
     guessing_bot.train(train_dataloader, params)
-    T.save(guessing_bot.state_dict(), '')
+    path = str(pathlib.Path().absolute())
+    T.save(guessing_bot.state_dict(), path+'/guess_bot.pkl')
     """q_idx, a_idx = ut.convert_statements_to_idx("how many people?", "2", guessing_bot.token_to_ix)
     q, a = T.tensor(np.array([q_idx])), T.tensor(np.array([a_idx]))
     ql, al = T.tensor(np.array([[len(q_idx)]])), T.tensor(np.array([[len(a_idx)]]))

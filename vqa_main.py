@@ -12,8 +12,8 @@ def model_work(image_id, question, encoding=None):
         image_feat = torch.tensor([encoding])  # (num_objects, 2048)
         print(image_feat.size())
     else:
-        image_idx = image_id[:-4]
-        vqa_object = VQA('mfb')
+        image_idx = image_id
+        vqa_object = VQA('mfb','eval')
         feats = np.load(f'assets/feats/{image_idx}.npz')
         image_feat = torch.tensor(feats['x'].T)  # (num_objects, 2048)
 
